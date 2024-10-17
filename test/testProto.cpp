@@ -1,5 +1,6 @@
 #include "Proto.h"
 
+
 int main() {
     aim::ArmorRect am1{};
     std::cout << am1 << "\n";
@@ -15,7 +16,7 @@ int main() {
     ams.insert(am2);
     ams.insert(am3);
     ams.insert(am4);
-    for (auto it{ams.begin()}; it != ams.end(); it++) {
+    for (auto it{ams.begin()}; it != ams.end(); it ++) {
         std::cout << *it << "\n";
     }
 

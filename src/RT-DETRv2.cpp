@@ -1,82 +1,118 @@
 #include "RT-DETRv2.h"
 #include "OvCore.h"
+#include "Proto.h"
 #include <cstdint>
-#include <exception>
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/core/mat.hpp>
+#include <opencv2/core/types.hpp>
+#include <openvino/core/dimension.hpp>
 #include <openvino/core/preprocess/color_format.hpp>
 #include <openvino/core/preprocess/input_info.hpp>
+#include <openvino/core/preprocess/output_info.hpp>
 #include <openvino/core/preprocess/pre_post_process.hpp>
 #include <openvino/core/preprocess/resize_algorithm.hpp>
 #include <string>
 
 namespace aim {
 
-RTDETRv2::RTDETRv2(std::string model_path) {
-    RTDETRv2(model_path, false);
-}
+RTDETRv2::RTDETRv2(std::string model_path) { RTDETRv2(model_path, false); }
 RTDETRv2::RTDETRv2(std::string model_path, bool is_verbose) {
-    if (is_verbose)
-        loadVerbose(model_path);
-    else
-        loadQuiet(model_path);
+  if (is_verbose)
+    loadVerbose(model_path);
+  else
+    loadQuiet(model_path);
 }
 
-void RTDETRv2::getInputPort(bool is_verbose) {
-    input_port1 = compiled_model.input(0);
-    if (is_verbose)
-        RTDETRv2::coutInfo("Input 0: " + input_port1.get_any_name());
-    input_port2 = compiled_model.input(1);
-    if (is_verbose)
-        RTDETRv2::coutInfo("Input 1: " + input_port2.get_any_name());
-}
-
-void RTDETRv2::coutInfo(std::string info) {
-    aim::coutInfo("RTDETRv2", info);
-}
+void RTDETRv2::coutInfo(std::string info) { aim::coutInfo("RTDETRv2", info); }
 
 void RTDETRv2::coutInfo(std::string prefix, std::string info) {
-    aim::coutInfo(prefix, "RTDETRv2", info);
+  aim::coutInfo(prefix, "RTDETRv2", info);
 }
 
 std::shared_ptr<ov::Model> RTDETRv2::ppp(std::shared_ptr<ov::Model> model) {
-    ov::preprocess::PrePostProcessor ppp(model);
-    ov::preprocess::InputInfo &images = ppp.input(0);
+  ov::preprocess::PrePostProcessor ppp(model);
+  ov::preprocess::InputInfo &images = ppp.input(0);
+  ov::preprocess::InputInfo &orig_target_sizes = ppp.input(1);
+  ov::preprocess::OutputInfo &labels = ppp.output(0);
 
-    images.tensor()
-        .set_element_type(ov::element::u8)
-        .set_shape({1, 640, 960, 3})
-        .set_layout("NHWC");
-    images.model().set_layout("NCHW");
-    RTDETRv2::coutInfo("Input 0: u8");
-    RTDETRv2::coutInfo("Input 0: NHWC");
+  // input tensor match cv::Mat
+  images.tensor().set_element_type(ov::element::u8);
+  RTDETRv2::coutInfo("Input 0 -> u8");
+  images.tensor().set_layout("NHWC");
+  RTDETRv2::coutInfo("Input 0 -> NHWC");
+  images.tensor().set_shape({1, -1, -1, 3});
+  RTDETRv2::coutInfo("Input 0 -> dynamic shape");
+  images.tensor().set_color_format(ov::preprocess::ColorFormat::BGR);
+  RTDETRv2::coutInfo("Input 0 -> BGR");
 
-    // images.tensor().set_spatial_dynamic_shape();
-    images.preprocess().resize(ov::preprocess::ResizeAlgorithm::RESIZE_BILINEAR_PILLOW,
-                               640, 640);
-    RTDETRv2::coutInfo("Input 0: dynamic size");
+  images.model().set_layout("NCHW");
+  images.preprocess().convert_color(ov::preprocess::ColorFormat::RGB);
+  // images.preprocess().scale(255);
+  images.preprocess().resize(
+      ov::preprocess::ResizeAlgorithm::RESIZE_LINEAR);
 
-    images.tensor().set_color_format(ov::preprocess::ColorFormat::BGR);
-    images.preprocess().convert_color(ov::preprocess::ColorFormat::RGB);
-    RTDETRv2::coutInfo("Input 0: BGR");
+  orig_target_sizes.tensor().set_element_type(ov::element::u16);
+  RTDETRv2::coutInfo("Input 1 -> u16");
+  orig_target_sizes.tensor().set_shape({1, 2});
+  RTDETRv2::coutInfo("Input 1 -> [1,2]");
 
-    ov::preprocess::InputInfo &orig_target_sizes = ppp.input(1);
-    orig_target_sizes.tensor().set_element_type(ov::element::u16);
-    RTDETRv2::coutInfo("Input 1: element type -> u16");
-    orig_target_sizes.tensor().set_shape({1, 2});
-    RTDETRv2::coutInfo("Input 1: shape -> {1, 2}");
+  labels.tensor().set_element_type(ov::element::u8);
+  RTDETRv2::coutInfo("Output 0 -> u8");
 
-    return ppp.build();
+  return ppp.build();
 }
 
-void RTDETRv2::mat2ov(const cv::Mat &mat, ov::Tensor &tensor) {
-    if (mat.total() * mat.elemSize() != tensor.get_size()) {
-        RTDETRv2::coutInfo("ERROR", "Got unmatched cv::Mat and ov::Tensor!");
-        std::terminate();
-    }
-    const std::uint8_t *mat_ptr = mat.ptr<std::uint8_t>();
-    std::uint8_t *tensor_ptr = tensor.data<std::uint8_t>();
-    std::memcpy(tensor_ptr, mat_ptr, mat.total() * mat.elemSize());
+void RTDETRv2::infer(const cv::Mat &mat) {
+  infer_request.reset_state();
+  auto img = infer_request.get_input_tensor(0);
+  coutInfo("Get img w = " + std::to_string(mat.cols));
+  coutInfo("Get img h = " + std::to_string(mat.rows));
+  coutInfo("Get img type = " + std::to_string(mat.type()));
+  coutInfo("Input img w = " + std::to_string(img.get_shape()[1]));
+  coutInfo("Input img h = " + std::to_string(img.get_shape()[2]));
+  coutInfo("Input img type = " + img.get_element_type().to_string());
+
+  std::uint8_t *input_img_data = (std::uint8_t *)mat.data;
+  ov::Tensor input_img =
+      ov::Tensor(infer_request.get_input_tensor(0).get_element_type(),
+                 ov::Shape{1, static_cast<unsigned long>(mat.rows),
+                           static_cast<unsigned long>(mat.cols), 3},
+                 input_img_data);
+  infer_request.set_input_tensor(0, input_img);
+
+  std::uint16_t input_size_data[2] = {static_cast<uint16_t>(mat.rows), static_cast<uint16_t>(mat.cols)};
+  ov::Tensor input_size =
+      ov::Tensor(infer_request.get_input_tensor(1).get_element_type(),
+                 ov::Shape{1, 2}, input_size_data);
+  infer_request.set_input_tensor(1, input_size);
+
+  infer_request.infer();
+  auto output0 = infer_request.get_output_tensor(0);
+  auto output1 = infer_request.get_output_tensor(1);
+  auto output2 = infer_request.get_output_tensor(2);
+
+  aim::ArmorRectDetSet set;
+  postproc(output0, output1, output2, set);
+}
+
+void RTDETRv2::postproc(const ov::Tensor &labels, const ov::Tensor &bboxes,
+                        const ov::Tensor &scores,
+                        aim::ArmorRectDetSet &armors) {
+  auto labels_data = labels.data<std::uint8_t>();
+  auto bboxes_data = bboxes.data<float>();
+  auto scores_data = scores.data<float>();
+
+  for (size_t i{0}; i < 300; i++) {
+    armors.insert(aim::ArmorRectDet{*bboxes_data, *(bboxes_data + 1),
+                                    *(bboxes_data + 2) - *bboxes_data, *(bboxes_data + 3) - *(bboxes_data + 1),
+                                    *scores_data, *labels_data});
+    labels_data++;
+    bboxes_data += 4;
+    scores_data++;
+  }
+  for (auto am : armors) {
+    std::cout << am << "\n";
+  }
 }
 } // namespace aim
 

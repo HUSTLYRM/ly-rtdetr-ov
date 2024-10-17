@@ -7,24 +7,42 @@
 
 namespace aim {
 
-class ArmorRect : public cv::Rect2f {
-  public:
-    std::uint8_t bar_color;
-    std::uint8_t pattern;
-    float prob;
+class ArmorRectDet : public cv::Rect2f {
+public:
+  std::uint8_t cls;
+  float prob;
 
-    ArmorRect() = default;
-    ArmorRect(float, float, float, float, float, std::uint8_t, std::uint8_t);
-    ~ArmorRect() = default;
+  ArmorRectDet() = default;
+  ArmorRectDet(float, float, float, float, float, std::uint8_t);
+  ~ArmorRectDet() = default;
 
-    struct Cmp {
-        bool operator()(const ArmorRect &, const ArmorRect &) const;
-    };
-
-    friend std::ostream &operator<<(std::ostream &os, const ArmorRect &am);
+  friend std::ostream &operator<<(std::ostream &os, const ArmorRectDet &am);
 };
 
-using ArmorRects = std::set<ArmorRect, ArmorRect::Cmp>;
+struct CmpArmorRectDet {
+  bool operator()(const ArmorRectDet &, const ArmorRectDet &) const;
+};
+
+using ArmorRectDetSet = std::set<ArmorRectDet, CmpArmorRectDet>;
+
+class ArmorRect : public cv::Rect2f {
+public:
+  std::uint8_t bar_color;
+  std::uint8_t pattern;
+  float prob;
+
+  ArmorRect() = default;
+  ArmorRect(float, float, float, float, float, std::uint8_t, std::uint8_t);
+  ~ArmorRect() = default;
+
+  friend std::ostream &operator<<(std::ostream &os, const ArmorRect &am);
+};
+
+struct CmpArmorRect {
+  bool operator()(const ArmorRect &, const ArmorRect &) const;
+};
+
+using ArmorRectSet = std::set<ArmorRect, CmpArmorRect>;
 
 } // namespace aim
 

@@ -6,9 +6,9 @@
 
 namespace aim::trans {
 
-inline void hwc2ov(cv::Mat &);
-inline void todtype(cv::Mat &);
-inline void normalize(cv::Mat &);
-} // namespace aim::trans
+inline void hwc2ov(cv::Mat&);
+inline void todtype(cv::Mat&);
+inline void normalize(cv::Mat&);
+}
 
 #endif // AUTOAIM_CV_TRANS_H

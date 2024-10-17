@@ -24,6 +24,7 @@ add_executable(testRTDETRv2
 ${CMAKE_CURRENT_LIST_DIR}/testRT-DETRv2.cpp
 ${CMAKE_CURRENT_LIST_DIR}/../src/OvCore.cpp
 ${CMAKE_CURRENT_LIST_DIR}/../src/RT-DETRv2.cpp
+${CMAKE_CURRENT_LIST_DIR}/../src/Proto.cpp
 )
 
 # add_executable(testProto

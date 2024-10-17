@@ -5,10 +5,11 @@
 
 namespace aim::trans {
 
-void hwc2ov(cv::Mat &mat) {
+void hwc2ov(cv::Mat& mat) {
     /// hwc -> chw -> ovTensor
+    
 }
 
-} // namespace aim::trans
+}
 
 #endif // AUTOAIM_CV_TRANS_CPP
