@@ -19,11 +19,7 @@ constexpr std::uint16_t rtdetrv2_input_width = 640;
 
 class RTDETRv2 : public openvino::AimCore {
 public:
-  // ov::Output<const ov::Node> input_port1, input_port2;
-
-  RTDETRv2(std::string);
   RTDETRv2(std::string, bool);
-  ~RTDETRv2() = default;
 
   void loadQuiet(std::string model_path) override {
     auto model = core.read_model(model_path);
@@ -31,8 +27,6 @@ public:
     RTDETRv2::coutInfo("Using quiet compilation...");
     compiled_model = core.compile_model(model);
     infer_request = compiled_model.create_infer_request();
-    // infer_request.infer();
-    // RTDETRv2::getInputPort(false);
   }
 
   void loadVerbose(std::string model_path) override {
@@ -43,10 +37,7 @@ public:
     compiled_model = core.compile_model(model);
     RTDETRv2::coutInfo("Successfully compile model!");
     infer_request = compiled_model.create_infer_request();
-    // infer_request.infer();
     RTDETRv2::coutInfo("Successfully request inference!");
-    // RTDETRv2::getInputPort(true);
-    // RTDETRv2::coutInfo("Successfully get 2 input ports!");
   };
 
   void getInputPort(bool);

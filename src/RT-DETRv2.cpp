@@ -14,8 +14,6 @@
 #include <string>
 
 namespace aim {
-
-RTDETRv2::RTDETRv2(std::string model_path) { RTDETRv2(model_path, false); }
 RTDETRv2::RTDETRv2(std::string model_path, bool is_verbose) {
   if (is_verbose)
     loadVerbose(model_path);
@@ -30,35 +28,31 @@ void RTDETRv2::coutInfo(std::string prefix, std::string info) {
 }
 
 std::shared_ptr<ov::Model> RTDETRv2::ppp(std::shared_ptr<ov::Model> model) {
+
   ov::preprocess::PrePostProcessor ppp(model);
-  ov::preprocess::InputInfo &images = ppp.input(0);
-  ov::preprocess::InputInfo &orig_target_sizes = ppp.input(1);
-  ov::preprocess::OutputInfo &labels = ppp.output(0);
-
-  // input tensor match cv::Mat
-  images.tensor().set_element_type(ov::element::u8);
+  ppp.input(0).tensor()
+      .set_element_type(ov::element::u8)
+      .set_shape({1, -1, -1, 3})
+      .set_layout("NHWC")
+      .set_color_format(ov::preprocess::ColorFormat::BGR);
+  ppp.input(0).preprocess()
+      .convert_element_type(ov::element::f32)
+      .convert_color(ov::preprocess::ColorFormat::RGB)
+      .scale({255, 255, 255})
+      .resize(ov::preprocess::ResizeAlgorithm::RESIZE_LINEAR, 640, 640);
+  ppp.input(0).model().set_layout("NCHW");
+  ppp.input(1).tensor()
+      .set_element_type(ov::element::u16)
+      .set_shape({1, 2});
+  ppp.output(0).tensor().set_element_type(ov::element::u8);
+  
   RTDETRv2::coutInfo("Input 0 -> u8");
-  images.tensor().set_layout("NHWC");
   RTDETRv2::coutInfo("Input 0 -> NHWC");
-  images.tensor().set_shape({1, -1, -1, 3});
   RTDETRv2::coutInfo("Input 0 -> dynamic shape");
-  images.tensor().set_color_format(ov::preprocess::ColorFormat::BGR);
   RTDETRv2::coutInfo("Input 0 -> BGR");
-
-  images.model().set_layout("NCHW");
-  images.preprocess().convert_color(ov::preprocess::ColorFormat::RGB);
-  // images.preprocess().scale(255);
-  images.preprocess().resize(
-      ov::preprocess::ResizeAlgorithm::RESIZE_LINEAR);
-
-  orig_target_sizes.tensor().set_element_type(ov::element::u16);
   RTDETRv2::coutInfo("Input 1 -> u16");
-  orig_target_sizes.tensor().set_shape({1, 2});
   RTDETRv2::coutInfo("Input 1 -> [1,2]");
-
-  labels.tensor().set_element_type(ov::element::u8);
   RTDETRv2::coutInfo("Output 0 -> u8");
-
   return ppp.build();
 }
 
