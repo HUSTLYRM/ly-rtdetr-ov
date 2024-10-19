@@ -6,6 +6,14 @@ cd test && mkdir build && cd build && cmake .. && make && ./testRTDETRv2
 
 # Training
 
+## *dataset*
+
+```
+http://www.hustlangya.fun/%E6%95%B0%E6%8D%AE%E9%9B%86/AutoAim-ObjDet
+```
+
+## *command*
+
 ```shell
 cd rtdetrv2_pytorch
 pip install -r requirements.txt
