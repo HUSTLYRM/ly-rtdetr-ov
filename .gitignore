@@ -3,4 +3,3 @@ build
 .vscode
 .git
 __pycache__
-*.pth
