@@ -173,49 +173,23 @@ class ConvertCocoPolysToMask(object):
         # target["size"] = torch.as_tensor([int(w), int(h)])
     
         return image, target
+    
 
+import yaml
+from pathlib import Path
 
-mscoco_category2name = {
-    0: 'B_G',
-    1: 'B_1',
-    2: 'B_2',
-    3: 'B_3',
-    4: 'B_4',
-    5: 'B_5',
-    6: 'B_O',
-    7: 'B_Bs',
-    8: 'B_Bb',
+rm_remapv1 = Path(__file__).parent.parent.parent.parent / 'configs' / 'dataset' / 'rm_remapv1.yml'
+assert rm_remapv1.is_file() and rm_remapv1.suffix == '.yml'
+with rm_remapv1.open() as f:
+    rm_category2name_v1 = yaml.safe_load(f)
+rm_category2label_v1 = {k: i for i, k in enumerate(rm_category2name_v1.keys())}
+rm_label2category_v1 = {v: k for k, v in rm_category2label_v1.items()}
 
-    9: 'R_G',
-    10: 'R_1',
-    11: 'R_2',
-    12: 'R_3',
-    13: 'R_4',
-    14: 'R_5',
-    15: 'R_O',
-    16: 'R_Bs',
-    17: 'R_Bb',
+rm_remapv2 = Path(__file__).parent.parent.parent.parent / 'configs' / 'dataset' / 'rm_remapv2.yml'
+assert rm_remapv2.is_file() and rm_remapv2.suffix == 'yml'
+with rm_remapv2.open() as f:
+    rm_category2name_v2 = yaml.safe_load(f)
+rm_category2label_v2 = {k: i for i, k in enumerate(rm_category2name_v2.keys())}
+rm_label2category_v2 = {v: k for k, v in rm_category2label_v2.items()}
 
-    18: 'N_G',
-    19: 'N_1',
-    20: 'N_2',
-    21: 'N_3',
-    22: 'N_4',
-    23: 'N_5',
-    24: 'N_O',
-    25: 'N_Bs',
-    26: 'N_Bb',
-
-    27: 'P_G',
-    28: 'P_1',
-    29: 'P_2',
-    30: 'P_3',
-    31: 'P_4',
-    32: 'P_5',
-    33: 'P_O',
-    34: 'P_Bs',
-    35: 'P_Bb',
-}
-
-mscoco_category2label = {k: i for i, k in enumerate(mscoco_category2name.keys())}
-mscoco_label2category = {v: k for k, v in mscoco_category2label.items()}
+# print(rm_category2name_v1, rm_category2label_v1, rm_label2category_v1)

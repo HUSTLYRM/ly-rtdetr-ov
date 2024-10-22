@@ -4,7 +4,7 @@
 import torch 
 
 from .utils import inverse_sigmoid
-from .box_ops import box_cxcywh_to_xyxy, box_xyxy_to_cxcywh, quad_cxcywh_to_xyxy, quad_xyxy_to_cxcywh
+from .box_ops import quad_xyxy_to_cxcywh
 
 
 def get_contrastive_denoising_training_group(targets,
@@ -102,13 +102,12 @@ def get_contrastive_denoising_training_group(targets,
     #     input_query_bbox_unact = inverse_sigmoid(input_query_bbox)
 
     if quad_noise_scale > 0:
-        known_quad = input_query_quad
         diff = quad_xyxy_to_cxcywh(input_query_quad)[..., [2, 3, 2, 3, 6, 7, 6, 7]] * quad_noise_scale * 0.5
         rand_sign = torch.randint_like(input_query_quad, 0, 2) * 2.0 - 1.0
         rand_part = torch.rand_like(input_query_quad)
         rand_part = (rand_part + 1.0) * negative_gt_mask + rand_part * (1 - negative_gt_mask)
-        known_quad += (rand_sign * rand_part * diff)
-        input_query_quad = torch.clamp(known_quad, min=0, max=1)
+        input_query_quad += (rand_sign * rand_part * diff)
+        input_query_quad = torch.clamp(input_query_quad, min=0, max=1)
         input_query_quad_unact = inverse_sigmoid(input_query_quad)
 
     # input_query_logits = class_embed(input_query_class)
@@ -138,6 +137,7 @@ def get_contrastive_denoising_training_group(targets,
 
     # print(input_query_class.shape) # torch.Size([4, 196, 256])
     # print(input_query_bbox.shape) # torch.Size([4, 196, 4])
+    # print(input_query_quad.shape) # torch.Size([4, 196, 8])
     # print(attn_mask.shape) # torch.Size([496, 496])
     
     # return input_query_logits, input_query_bbox_unact, attn_mask, dn_meta

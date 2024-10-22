@@ -1,9 +1,14 @@
 doing:
-    src/zoo/rtdetr/denoising.py
-
+    rtdetrv2_criterion.py
+    
 refinement:
     src/zoo/rtdetr/matcher.py
     src/zoo/rtdetr/box_ops.py
+    src/zoo/rtdetr/denoising.py
+    src/zoo/rtdetr/rtdetr_postprocessor.py
 
 ignored:
     src/zoo/rtdetr/conver_params.py
+
+dont understand:
+    src/zoo/rtdetr/rtdetr_postprocessor.py
