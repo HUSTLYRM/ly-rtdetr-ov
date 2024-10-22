@@ -9,13 +9,13 @@ cd test && mkdir build && cd build && cmake .. && make && ./testRTDETRv2
 ## *dataset*
 
 ```
-http://www.hustlangya.fun/%E6%95%B0%E6%8D%AE%E9%9B%86/AutoAim-ObjDet
+http://db.hustlangya.fun/%E6%95%B0%E6%8D%AE%E9%9B%86/AutoAim-ObjDet
 ```
 
 ## *pretrained model*
 
 ```
-http://www.hustlangya.fun/%E6%A8%A1%E5%9E%8B%E5%BA%93/AutoAim-rtdetr
+http://db.hustlangya.fun/%E6%A8%A1%E5%9E%8B%E5%BA%93/AutoAim-rtdetr
 ```
 
 ## *command*
