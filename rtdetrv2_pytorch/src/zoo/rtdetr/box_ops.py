@@ -35,6 +35,16 @@ def quad_to_bbox(quads: Tensor) -> Tensor:
     return torch.cat((xmin, ymin, xmax, ymax), -1)
 
 
+def quad_xyxy_to_cxcywh(quads: Tensor) -> Tensor:
+    quads = quads.reshape(*quads.shape[-1:], 2, 4)
+    return box_xyxy_to_cxcywh(quads).flatten(-2)
+
+
+def quad_cxcywh_to_xyxy(quads: Tensor) -> Tensor:
+    quads = quads.reshape(*quads.shape[-1:], 2, 4)
+    return box_cxcywh_to_xyxy(quads).flatten(-2)
+
+
 # modified from torchvision to also return the union
 def box_iou(boxes1: Tensor, boxes2: Tensor):
     area1 = box_area(boxes1)
