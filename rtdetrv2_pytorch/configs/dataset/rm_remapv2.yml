@@ -1,18 +1,18 @@
 rm_category2name_v2:
 
   bar:
-    0: B_blue
-    1: R_red
-    2: N_negative
-    3: P_purple
+    0: "B_blue"
+    1: "R_red"
+    2: "N_negative"
+    3: "P_purple"
 
   pattern:
-    0: 'G_sentry'
-    1: '1'
-    2: '2'
-    3: '3'
-    4: '4'
-    5: '5'
-    6: 'O_outpost'
-    7: 'Bs_base'
-    8: 'Bb_baseblob'
+    0: "G_sentry"
+    1: "1"
+    2: "2"
+    3: "3"
+    4: "4"
+    5: "5"
+    6: "O_outpost"
+    7: "Bs_base"
+    8: "Bb_baseblob"

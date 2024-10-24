@@ -2,11 +2,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 https://github.com/facebookresearch/detr/blob/main/util/box_ops.py
 """
-"""
-MIT License
-Copyright (c) 2024 AmadFat
-https://github.com/HUSTLYRM/ly-rtdetr-ov
-"""
 
 import torch
 from torch import Tensor
@@ -25,24 +20,6 @@ def box_xyxy_to_cxcywh(x: Tensor) -> Tensor:
     b = [(x0 + x1) / 2, (y0 + y1) / 2,
          (x1 - x0), (y1 - y0)]
     return torch.stack(b, dim=-1)
-
-
-def quad_to_bbox(quads: Tensor) -> Tensor:
-    xmin = quads[0::2].min(-1, True).values
-    ymin = quads[1::2].min(-1, True).values
-    xmax = quads[0::2].max(-1, True).values
-    ymax = quads[1::2].max(-1, True).values
-    return torch.cat((xmin, ymin, xmax, ymax), -1)
-
-
-def quad_xyxy_to_cxcywh(quads: Tensor) -> Tensor:
-    quads = quads.reshape(*quads.shape[-1:], 2, 4)
-    return box_xyxy_to_cxcywh(quads).flatten(-2)
-
-
-def quad_cxcywh_to_xyxy(quads: Tensor) -> Tensor:
-    quads = quads.reshape(*quads.shape[-1:], 2, 4)
-    return box_cxcywh_to_xyxy(quads).flatten(-2)
 
 
 # modified from torchvision to also return the union

@@ -12,23 +12,22 @@ from typing import Any, Dict, Optional, List
 GLOBAL_CONFIG = defaultdict(dict)
 
 
-def register(dct :Any=GLOBAL_CONFIG, name=None, force=False):
+def register(dct=GLOBAL_CONFIG, name=None, force=False):
     """
-        dct:
+    Params:
+        dct
             if dct is Dict, register foo into dct as key-value pair
             if dct is Clas, register as modules attibute
-        force 
+        force
             whether force register.
     """
     def decorator(foo):
         register_name = foo.__name__ if name is None else name
         if not force:
             if inspect.isclass(dct):
-                assert not hasattr(dct, foo.__name__), \
-                    f'module {dct.__name__} has {foo.__name__}'
+                assert not hasattr(dct, foo.__name__), f'module {dct.__name__} has {foo.__name__}'
             else:
-                assert foo.__name__ not in dct, \
-                f'{foo.__name__} has been already registered'
+                assert foo.__name__ not in dct, f'{foo.__name__} has been already registered'
 
         if inspect.isfunction(foo):
             @functools.wraps(foo)
@@ -39,16 +38,15 @@ def register(dct :Any=GLOBAL_CONFIG, name=None, force=False):
             elif inspect.isclass(dct):
                 setattr(dct, foo.__name__, wrap_func)
             else:
-                raise AttributeError('')
+                raise AttributeError
             return wrap_func
 
         elif inspect.isclass(foo):
-            dct[register_name] = extract_schema(foo) 
+            dct[register_name] = extract_schema(foo)
+            return foo
 
         else:
             raise ValueError(f'Do not support {type(foo)} register')
-
-        return foo
 
     return decorator
 

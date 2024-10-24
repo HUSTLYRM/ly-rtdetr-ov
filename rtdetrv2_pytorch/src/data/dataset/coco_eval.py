@@ -11,10 +11,6 @@ import copy
 import numpy as np
 import torch
 
-import itertools
-from terminaltables import AsciiTable
-import numpy as np
-
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 import pycocotools.mask as mask_util
@@ -27,8 +23,7 @@ __all__ = ['CocoEvaluator',]
 
 @register()
 class CocoEvaluator(object):
-    def __init__(self, coco_gt, iou_types, classwise=True):#######################
-        self.classwise = classwise#################
+    def __init__(self, coco_gt, iou_types):
         assert isinstance(iou_types, (list, tuple))
         coco_gt = copy.deepcopy(coco_gt)
         self.coco_gt = coco_gt
@@ -77,71 +72,10 @@ class CocoEvaluator(object):
         for coco_eval in self.coco_eval.values():
             coco_eval.accumulate()
 
-#    def summarize(self):
-#        for iou_type, coco_eval in self.coco_eval.items():
-#            print("IoU metric: {}".format(iou_type))
-#            coco_eval.summarize()
-    
     def summarize(self):
         for iou_type, coco_eval in self.coco_eval.items():
             print("IoU metric: {}".format(iou_type))
             coco_eval.summarize()
-
-            if self.classwise:
-                self.summarize_classwise(coco_eval, iou_type)
-
-    def summarize_classwise(self, coco_eval, iou_type):
-        precisions = coco_eval.eval['precision']
-        assert len(self.coco_gt.getCatIds()) == precisions.shape[2]
-
-        results_per_category = []
-        for idx, cat_id in enumerate(self.coco_gt.getCatIds()):
-            t = []
-            nm = self.coco_gt.loadCats(cat_id)[0]
-            precision = precisions[:, :, idx, 0, -1]
-            precision = precision[precision > -1]
-            if precision.size:
-                ap = np.mean(precision)
-            else:
-                ap = float('nan')
-            t.append(f'{nm["name"]}')
-            t.append(f'{round(ap, 3)}')
-
-            # indexes of IoU @50 and @75
-            for iou in [0, 5]:
-                precision = precisions[iou, :, idx, 0, -1]
-                precision = precision[precision > -1]
-                if precision.size:
-                    ap = np.mean(precision)
-                else:
-                    ap = float('nan')
-                t.append(f'{round(ap, 3)}')
-
-            # indexes of area of small, median and large
-            for area in [1, 2, 3]:
-                precision = precisions[:, :, idx, area, -1]
-                precision = precision[precision > -1]
-                if precision.size:
-                    ap = np.mean(precision)
-                else:
-                    ap = float('nan')
-                t.append(f'{round(ap, 3)}')
-            results_per_category.append(tuple(t))
-
-        num_columns = len(results_per_category[0])
-        results_flatten = list(itertools.chain(*results_per_category))
-        headers = [
-            'category', 'mAP', 'mAP_50', 'mAP_75', 'mAP_s',
-            'mAP_m', 'mAP_l'
-        ]
-        results_2d = itertools.zip_longest(*[
-            results_flatten[i::num_columns]
-            for i in range(num_columns)
-        ])
-        table_data = [headers]
-        table_data += [result for result in results_2d]
-        table = AsciiTable(table_data)
-        print(f"\n{iou_type} evaluation per category:\n" + table.table)
 
     def prepare(self, predictions, iou_type):
         if iou_type == "bbox":
@@ -335,11 +269,9 @@ def evaluate(self):
     self._paramsEval = copy.deepcopy(self.params)
     # toc = time.time()
     # print('DONE (t={:0.2f}s).'.format(toc-tic))
-    
-
-        
     return p.imgIds, evalImgs
 
 #################################################################
 # end of straight copy from pycocotools, just removing the prints
 #################################################################
+
